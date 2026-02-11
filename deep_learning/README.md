@@ -9,6 +9,7 @@ Non-linear function
     - positives -> unchanges 
     - avoids negative numbers
     - ex: housing price prediction doesn't go below zero
+- a neuron computes a linear function z = Wx + b followed by an activation function
 
 Example - housing price prediction
 - size + # bedrooms -> neuron -> predicts family size                    ->
@@ -92,3 +93,17 @@ import numpy as np
 # for each input feature x, multiply by the weight w
 z = np.dot(w, x) + b
 ```
+
+Review
+- a neuron computes a linear function (z = Wx + b)
+    - take each feature (x), multiply it by its corresponding weight (W), then sum them
+    - bias(b) is the learned offset that shifts the prediction output
+- followed by an activation function
+    - sigmoid typically used for binary classification (0 or 1 prediction)
+    - softmax for multi-class classification
+    - ReLU for linear regression to predict a number we don't want to go below 0
+
+- in a neural network
+    - each neuron applies a simple nonlinear “bend” to the input space
+    - when you compose many of these layers, the bends stack
+    - the result is a highly complex decision surface
