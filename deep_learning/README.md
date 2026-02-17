@@ -107,3 +107,30 @@ Review
     - each neuron applies a simple nonlinear “bend” to the input space
     - when you compose many of these layers, the bends stack
     - the result is a highly complex decision surface
+
+C1W2_Assignment_2 notes
+- overview
+    - cat vs non-cat images
+    - the model is a single "neuron"
+    - takes the pixels, multiplies them by learned weights, adds a bias, then squashes the results to a number between 0 and 1 (probability of cat)
+    - the model learns the weights and bias that will get the probabilities closer to the true label   
+    - inputs (pixels) -> learn forumla -> probability -> decision
+
+- single training step 
+    1. forward propogation - get predictions + cost
+        - uses the current weights + bias to predict cat or not for every example and then computes a single number (the cost) that says how wrong the predictions are overall 
+            - big cost = doing badly
+        - small cost = doing well
+    2. backward propogation - get gradients
+         - figures out in which direction to nudge the weights and bias so the cost will go down
+         - computes gradients = how much each parameter is responsible for the error 
+    3. update - change w and b based on gradients
+    4. repeat for many iterations 
+
+- summary
+    - initialize parameters (weights and biases)
+    - optimize the loss iteratively to learn the parameters (weights and biases)
+        - compute the cost (is it perdicting well)
+        - compute the gradient (how to improve)
+        - update the parameters based on the gradient using gradient descent 
+    - use the learned parameter to predict cat vs not
