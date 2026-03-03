@@ -134,3 +134,13 @@ C1W2_Assignment_2 notes
         - compute the gradient (how to improve)
         - update the parameters based on the gradient using gradient descent 
     - use the learned parameter to predict cat vs not
+
+## Neural network overview
+Review
+- input features x and parameters w and b -> "raw score" z
+- feed "raw score" z into the activation function -> probability a
+- probability a -> prediction based on the value of a 
+- calculate the loss L to evaluate the quality of the prediction
+- ex: cat 1, non cat 0 - if a > 0.5 -> predict 1 cat, else predict 0 non-cat
+- ultimately we repeat the steps above over and over again in a neural network
+
