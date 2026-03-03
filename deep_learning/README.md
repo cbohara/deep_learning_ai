@@ -144,3 +144,9 @@ Review
 - ex: cat 1, non cat 0 - if a > 0.5 -> predict 1 cat, else predict 0 non-cat
 - ultimately we repeat the steps above over and over again in a neural network
 
+Layers in a neural network
+- input layer - features x
+- hidden layer - everything in between
+- output layer - provides prediction value (y hat)
+
+
