@@ -149,4 +149,11 @@ Layers in a neural network
 - hidden layer - everything in between
 - output layer - provides prediction value (y hat)
 
+each node in network involves 2 computations
+1. input features x and parameters w and b -> "raw score" z   
+2. pass "raw score" z into activation function -> probability a
 
+layer 1 - input X (features) -> compute Z1 -> apply activation -> get A1 
+layer 2 - input A1 (not X)   -> compute Z2 -> apply activation -> get A2 
+...
+layer n - input An-1 -> compute Zn-1 -> apply activation -> final A = output probability 
