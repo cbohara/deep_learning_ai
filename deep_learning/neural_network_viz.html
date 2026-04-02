@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neural Network Visualizer</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: #0f172a;
+    color: #e2e8f0;
+    overflow-x: hidden;
+  }
+
+  /* --- Navigation --- */
+  nav {
+    display: flex; gap: 8px; justify-content: center;
+    padding: 16px; background: #1e293b; border-bottom: 1px solid #334155;
+    position: sticky; top: 0; z-index: 10;
+  }
+  nav button {
+    padding: 10px 20px; border: 1px solid #475569; border-radius: 8px;
+    background: transparent; color: #94a3b8; cursor: pointer;
+    font-size: 14px; transition: all 0.3s;
+  }
+  nav button:hover { border-color: #818cf8; color: #c7d2fe; }
+  nav button.active { background: #4f46e5; border-color: #4f46e5; color: #fff; }
+
+  /* --- Sections --- */
+  .section { display: none; padding: 32px; max-width: 1100px; margin: 0 auto; }
+  .section.active { display: block; }
+  h2 { font-size: 28px; margin-bottom: 8px; color: #c7d2fe; }
+  .subtitle { color: #94a3b8; margin-bottom: 24px; font-size: 15px; }
+
+  /* --- Canvas common --- */
+  canvas { display: block; margin: 0 auto; border-radius: 12px; background: #1e293b; }
+
+  /* --- Controls --- */
+  .controls {
+    display: flex; gap: 16px; align-items: center; justify-content: center;
+    margin-top: 20px; flex-wrap: wrap;
+  }
+  .controls label { font-size: 13px; color: #94a3b8; }
+  .controls input[type=range] { width: 140px; accent-color: #818cf8; }
+  .btn {
+    padding: 10px 24px; border: none; border-radius: 8px;
+    background: #4f46e5; color: #fff; cursor: pointer; font-size: 14px;
+    transition: background 0.2s;
+  }
+  .btn:hover { background: #4338ca; }
+  .btn.secondary { background: #334155; }
+  .btn.secondary:hover { background: #475569; }
+
+  /* --- Info panel --- */
+  .info {
+    margin-top: 16px; padding: 16px; background: #1e293b; border-radius: 10px;
+    border: 1px solid #334155; font-size: 14px; line-height: 1.6;
+    text-align: center; color: #cbd5e1;
+  }
+  .info code { color: #a5b4fc; background: #312e81; padding: 2px 6px; border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<nav>
+  <button class="active" onclick="showSection('neuron')">Single Neuron</button>
+  <button onclick="showSection('network')">Neural Network</button>
+  <button onclick="showSection('gradient')">Gradient Descent</button>
+</nav>
+
+<!-- ===================== SECTION 1: Single Neuron ===================== -->
+<div id="neuron" class="section active">
+  <h2>How a Neuron Computes</h2>
+  <p class="subtitle">Adjust the inputs and weights to see how z = Wx + b flows through the activation function.</p>
+  <canvas id="neuronCanvas" width="900" height="420"></canvas>
+  <div class="controls">
+    <label>x1 <input type="range" id="x1" min="-3" max="3" step="0.1" value="1"></label>
+    <label>w1 <input type="range" id="w1" min="-3" max="3" step="0.1" value="0.8"></label>
+    <label>x2 <input type="range" id="x2" min="-3" max="3" step="0.1" value="-0.5"></label>
+    <label>w2 <input type="range" id="w2" min="-3" max="3" step="0.1" value="1.2"></label>
+    <label>bias <input type="range" id="bias" min="-3" max="3" step="0.1" value="0"></label>
+  </div>
+  <div class="info" id="neuronInfo"></div>
+</div>
+
+<!-- ===================== SECTION 2: Neural Network ===================== -->
+<div id="network" class="section">
+  <h2>Forward Propagation</h2>
+  <p class="subtitle">Watch data flow through a neural network layer by layer. Click "Propagate" to fire a signal.</p>
+  <canvas id="networkCanvas" width="900" height="480"></canvas>
+  <div class="controls">
+    <button class="btn" onclick="startPropagation()">Propagate</button>
+    <button class="btn secondary" onclick="resetNetwork()">Reset</button>
+    <label>Speed <input type="range" id="netSpeed" min="0.5" max="3" step="0.1" value="1.2"></label>
+  </div>
+  <div class="info" id="networkInfo">Click <b>Propagate</b> to send input signals through the network.</div>
+</div>
+
+<!-- ===================== SECTION 3: Gradient Descent ===================== -->
+<div id="gradient" class="section">
+  <h2>Gradient Descent</h2>
+  <p class="subtitle">Watch the optimizer find the minimum of the cost function step by step.</p>
+  <canvas id="gradientCanvas" width="900" height="460"></canvas>
+  <div class="controls">
+    <button class="btn" onclick="startGD()">Start Descent</button>
+    <button class="btn secondary" onclick="resetGD()">Reset</button>
+    <label>Learning Rate <input type="range" id="lr" min="0.01" max="0.5" step="0.01" value="0.1"></label>
+  </div>
+  <div class="info" id="gdInfo">Click <b>Start Descent</b> to optimize the parameter.</div>
+</div>
+
+<script>
+/* ============================== HELPERS ============================== */
+function sigmoid(z) { return 1 / (1 + Math.exp(-z)); }
+function lerp(a, b, t) { return a + (b - a) * t; }
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+/* ============================== NEURON VIZ ============================== */
+(function() {
+  const c = document.getElementById('neuronCanvas');
+  const ctx = c.getContext('2d');
+  let pulse = 0;
+
+  function val(id) { return parseFloat(document.getElementById(id).value); }
+
+  function draw() {
+    pulse += 0.04;
+    ctx.clearRect(0, 0, c.width, c.height);
+
+    const x1 = val('x1'), w1 = val('w1'), x2 = val('x2'), w2 = val('w2'), b = val('bias');
+    const z = x1*w1 + x2*w2 + b;
+    const a = sigmoid(z);
+
+    // positions
+    const inX = 120, neuronX = 420, outX = 720, cy = c.height/2;
+    const in1Y = cy - 80, in2Y = cy + 80;
+
+    // animated glow
+    const glowR = 28 + Math.sin(pulse) * 4;
+    const glow = ctx.createRadialGradient(neuronX, cy, 10, neuronX, cy, glowR + 30);
+    glow.addColorStop(0, `rgba(129,140,248,${0.5 + a*0.4})`);
+    glow.addColorStop(1, 'rgba(129,140,248,0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(neuronX - 80, cy - 80, 160, 160);
+
+    // connections with animated particles
+    function drawConn(sx, sy, ex, ey, w, label) {
+      const alpha = Math.min(1, Math.abs(w) / 3);
+      const color = w >= 0 ? `rgba(52,211,153,${alpha})` : `rgba(248,113,113,${alpha})`;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1 + Math.abs(w) * 1.5;
+      ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(ex, ey); ctx.stroke();
+
+      // particle
+      const t = (pulse * 0.3) % 1;
+      const px = lerp(sx, ex, t), py = lerp(sy, ey, t);
+      ctx.fillStyle = color;
+      ctx.beginPath(); ctx.arc(px, py, 4, 0, Math.PI*2); ctx.fill();
+
+      // weight label
+      const mx = (sx+ex)/2 - 10, my = (sy+ey)/2 - 14;
+      ctx.fillStyle = '#94a3b8'; ctx.font = '12px monospace';
+      ctx.fillText(label, mx, my);
+    }
+    drawConn(inX+30, in1Y, neuronX-28, cy, w1, `w1=${w1.toFixed(1)}`);
+    drawConn(inX+30, in2Y, neuronX-28, cy, w2, `w2=${w2.toFixed(1)}`);
+
+    // output connection
+    const outAlpha = 0.3 + a * 0.7;
+    ctx.strokeStyle = `rgba(129,140,248,${outAlpha})`;
+    ctx.lineWidth = 2 + a * 3;
+    ctx.beginPath(); ctx.moveTo(neuronX+28, cy); ctx.lineTo(outX-30, cy); ctx.stroke();
+    const ot = (pulse * 0.3) % 1;
+    ctx.fillStyle = `rgba(129,140,248,${outAlpha})`;
+    ctx.beginPath(); ctx.arc(lerp(neuronX+28, outX-30, ot), cy, 5, 0, Math.PI*2); ctx.fill();
+
+    // input nodes
+    function drawNode(x, y, label, value) {
+      ctx.fillStyle = '#334155'; ctx.beginPath(); ctx.arc(x, y, 26, 0, Math.PI*2); ctx.fill();
+      ctx.strokeStyle = '#475569'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, 26, 0, Math.PI*2); ctx.stroke();
+      ctx.fillStyle = '#e2e8f0'; ctx.font = 'bold 14px monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(value.toFixed(1), x, y);
+      ctx.fillStyle = '#94a3b8'; ctx.font = '13px sans-serif'; ctx.fillText(label, x, y - 42);
+    }
+    drawNode(inX, in1Y, 'x1', x1);
+    drawNode(inX, in2Y, 'x2', x2);
+
+    // neuron body
+    ctx.fillStyle = '#4f46e5';
+    ctx.beginPath(); ctx.arc(neuronX, cy, 28, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 11px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('z=' + z.toFixed(2), neuronX, cy - 6);
+    ctx.fillText('\u03C3(z)', neuronX, cy + 10);
+
+    // output node
+    const outColor = a > 0.5 ? '#34d399' : '#f87171';
+    ctx.fillStyle = outColor;
+    ctx.beginPath(); ctx.arc(outX, cy, 28, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 15px monospace';
+    ctx.fillText(a.toFixed(3), outX, cy + 1);
+    ctx.fillStyle = '#94a3b8'; ctx.font = '13px sans-serif';
+    ctx.fillText('output a', outX, cy - 44);
+
+    // bias label
+    ctx.fillStyle = '#fbbf24'; ctx.font = '12px monospace'; ctx.textAlign = 'center';
+    ctx.fillText(`b=${b.toFixed(1)}`, neuronX, cy + 50);
+
+    // sigmoid mini-graph
+    const gx = 700, gy = 60, gw = 160, gh = 80;
+    ctx.strokeStyle = '#334155'; ctx.lineWidth = 1;
+    ctx.strokeRect(gx, gy, gw, gh);
+    ctx.fillStyle = '#94a3b8'; ctx.font = '11px sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText('sigmoid(z)', gx, gy - 6);
+    ctx.beginPath(); ctx.strokeStyle = '#818cf8'; ctx.lineWidth = 2;
+    for (let i = 0; i <= gw; i++) {
+      const zz = (i / gw) * 12 - 6;
+      const yy = gy + gh - sigmoid(zz) * gh;
+      i === 0 ? ctx.moveTo(gx + i, yy) : ctx.lineTo(gx + i, yy);
+    }
+    ctx.stroke();
+    // current point
+    const dotXX = gx + (z + 6) / 12 * gw;
+    const dotYY = gy + gh - a * gh;
+    if (dotXX >= gx && dotXX <= gx + gw) {
+      ctx.fillStyle = '#f59e0b';
+      ctx.beginPath(); ctx.arc(dotXX, dotYY, 5, 0, Math.PI*2); ctx.fill();
+    }
+
+    // info
+    document.getElementById('neuronInfo').innerHTML =
+      `<code>z = (${x1.toFixed(1)} * ${w1.toFixed(1)}) + (${x2.toFixed(1)} * ${w2.toFixed(1)}) + ${b.toFixed(1)} = ${z.toFixed(3)}</code> &rarr; ` +
+      `<code>\u03C3(${z.toFixed(2)}) = ${a.toFixed(4)}</code> &rarr; prediction: <b style="color:${a>0.5?'#34d399':'#f87171'}">${a > 0.5 ? '1 (yes)' : '0 (no)'}</b>`;
+
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* ============================== NETWORK VIZ ============================== */
+(function() {
+  const c = document.getElementById('networkCanvas');
+  const ctx = c.getContext('2d');
+  const layers = [3, 5, 4, 2]; // nodes per layer
+  const nodes = [];
+  let particles = [];
+  let animating = false;
+  let phase = 0; // which layer boundary is active
+
+  // build node positions
+  const padX = 120, padY = 60;
+  const gapX = (c.width - padX*2) / (layers.length - 1);
+  layers.forEach((count, li) => {
+    const x = padX + li * gapX;
+    const totalH = c.height - padY*2;
+    const gap = totalH / (count + 1);
+    for (let ni = 0; ni < count; ni++) {
+      nodes.push({ x, y: padY + gap * (ni+1), layer: li, activation: 0, lit: false });
+    }
+  });
+
+  function nodesInLayer(l) { return nodes.filter(n => n.layer === l); }
+
+  window.startPropagation = function() {
+    if (animating) return;
+    animating = true; phase = 0; particles = [];
+    nodes.forEach(n => { n.activation = 0; n.lit = false; });
+    // light up input
+    nodesInLayer(0).forEach(n => { n.activation = Math.random()*0.6 + 0.4; n.lit = true; });
+    firePhase();
+  };
+
+  function firePhase() {
+    if (phase >= layers.length - 1) { animating = false; updateNetInfo(); return; }
+    const from = nodesInLayer(phase), to = nodesInLayer(phase+1);
+    const speed = parseFloat(document.getElementById('netSpeed').value);
+    from.forEach(fn => {
+      to.forEach(tn => {
+        particles.push({
+          sx: fn.x, sy: fn.y, ex: tn.x, ey: tn.y,
+          t: 0, speed: speed * (0.008 + Math.random()*0.006),
+          target: tn, strength: fn.activation * (Math.random()*0.6 + 0.4)
+        });
+      });
+    });
+    phase++;
+  }
+
+  window.resetNetwork = function() {
+    animating = false; particles = []; phase = 0;
+    nodes.forEach(n => { n.activation = 0; n.lit = false; });
+    document.getElementById('networkInfo').innerHTML = 'Click <b>Propagate</b> to send input signals through the network.';
+  };
+
+  function updateNetInfo() {
+    const out = nodesInLayer(layers.length-1);
+    const vals = out.map(n => n.activation.toFixed(3));
+    document.getElementById('networkInfo').innerHTML =
+      `Forward pass complete! Output activations: <code>[${vals.join(', ')}]</code> &mdash; ` +
+      `Each layer computed <code>z = Wx + b</code> then applied an activation function.`;
+  }
+
+  function drawNet() {
+    ctx.clearRect(0, 0, c.width, c.height);
+
+    // connections
+    for (let li = 0; li < layers.length - 1; li++) {
+      nodesInLayer(li).forEach(fn => {
+        nodesInLayer(li+1).forEach(tn => {
+          const alpha = Math.max(0.06, (fn.lit && tn.lit) ? 0.25 : 0.06);
+          ctx.strokeStyle = `rgba(148,163,184,${alpha})`;
+          ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(fn.x, fn.y); ctx.lineTo(tn.x, tn.y); ctx.stroke();
+        });
+      });
+    }
+
+    // particles
+    let allDone = true;
+    particles.forEach(p => {
+      if (p.t < 1) { allDone = false; p.t = Math.min(1, p.t + p.speed); }
+      if (p.t >= 1) { p.target.activation = Math.min(1, p.target.activation + p.strength * 0.15); p.target.lit = true; }
+      if (p.t < 1) {
+        const px = lerp(p.sx, p.ex, p.t), py = lerp(p.sy, p.ey, p.t);
+        ctx.fillStyle = `rgba(129,140,248,${0.8})`;
+        ctx.beginPath(); ctx.arc(px, py, 3, 0, Math.PI*2); ctx.fill();
+      }
+    });
+    if (allDone && particles.length > 0) {
+      particles = [];
+      setTimeout(firePhase, 200);
+    }
+
+    // nodes
+    nodes.forEach(n => {
+      const r = 18;
+      if (n.lit) {
+        const g = ctx.createRadialGradient(n.x, n.y, 4, n.x, n.y, r+16);
+        g.addColorStop(0, `rgba(129,140,248,${0.3 + n.activation*0.5})`);
+        g.addColorStop(1, 'rgba(129,140,248,0)');
+        ctx.fillStyle = g;
+        ctx.fillRect(n.x - r - 16, n.y - r - 16, (r+16)*2, (r+16)*2);
+      }
+      const bright = n.lit ? Math.floor(n.activation * 200) : 0;
+      ctx.fillStyle = `rgb(${30+bright*0.3}, ${30+bright*0.4}, ${80+bright})`;
+      ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, Math.PI*2); ctx.fill();
+      ctx.strokeStyle = n.lit ? '#818cf8' : '#475569'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, Math.PI*2); ctx.stroke();
+      if (n.lit) {
+        ctx.fillStyle = '#fff'; ctx.font = '11px monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(n.activation.toFixed(2), n.x, n.y);
+      }
+    });
+
+    // layer labels
+    const labels = ['Input', 'Hidden 1', 'Hidden 2', 'Output'];
+    layers.forEach((_, li) => {
+      const x = padX + li * gapX;
+      ctx.fillStyle = '#64748b'; ctx.font = '13px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText(labels[li], x, c.height - 16);
+    });
+
+    requestAnimationFrame(drawNet);
+  }
+  drawNet();
+})();
+
+/* ============================== GRADIENT DESCENT ============================== */
+(function() {
+  const c = document.getElementById('gradientCanvas');
+  const ctx = c.getContext('2d');
+  const padL = 80, padR = 40, padT = 40, padB = 60;
+  const gw = c.width - padL - padR, gh = c.height - padT - padB;
+
+  // cost function: J(w) = (w-2)^2 + 0.3*sin(5*w) + 1 (bumpy bowl)
+  function cost(w) { return (w-2)*(w-2) + 0.3*Math.sin(5*w) + 1; }
+  function dcost(w) { return 2*(w-2) + 0.3*5*Math.cos(5*w); }
+
+  const wMin = -1, wMax = 5;
+  let wCurrent = -0.5;
+  let history = [{ w: wCurrent, c: cost(wCurrent) }];
+  let running = false;
+  let stepTimer = null;
+  let bounce = 0;
+
+  function wToX(w) { return padL + (w - wMin) / (wMax - wMin) * gw; }
+  function cToY(c) {
+    const cMax = 12, cMin2 = 0;
+    return padT + (1 - (c - cMin2) / (cMax - cMin2)) * gh;
+  }
+
+  window.startGD = function() {
+    if (running) return;
+    running = true;
+    step();
+  };
+
+  function step() {
+    const lr = parseFloat(document.getElementById('lr').value);
+    const grad = dcost(wCurrent);
+    wCurrent = wCurrent - lr * grad;
+    wCurrent = Math.max(wMin, Math.min(wMax, wCurrent));
+    history.push({ w: wCurrent, c: cost(wCurrent) });
+
+    const info = document.getElementById('gdInfo');
+    info.innerHTML = `Step ${history.length-1}: <code>w = ${wCurrent.toFixed(4)}</code>, ` +
+      `<code>cost = ${cost(wCurrent).toFixed(4)}</code>, ` +
+      `<code>gradient = ${grad.toFixed(4)}</code>, ` +
+      `<code>lr = ${lr}</code>`;
+
+    if (Math.abs(grad) < 0.005 || history.length > 200) {
+      running = false;
+      info.innerHTML += ' &mdash; <b style="color:#34d399">Converged!</b>';
+      return;
+    }
+    stepTimer = setTimeout(step, 120);
+  }
+
+  window.resetGD = function() {
+    running = false;
+    clearTimeout(stepTimer);
+    wCurrent = -0.5;
+    history = [{ w: wCurrent, c: cost(wCurrent) }];
+    document.getElementById('gdInfo').innerHTML = 'Click <b>Start Descent</b> to optimize the parameter.';
+  };
+
+  function drawGD() {
+    bounce += 0.05;
+    ctx.clearRect(0, 0, c.width, c.height);
+
+    // axes
+    ctx.strokeStyle = '#475569'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(padL, padT); ctx.lineTo(padL, padT+gh); ctx.lineTo(padL+gw, padT+gh); ctx.stroke();
+
+    // axis labels
+    ctx.fillStyle = '#64748b'; ctx.font = '12px sans-serif'; ctx.textAlign = 'center';
+    for (let w = 0; w <= 5; w++) {
+      const x = wToX(w);
+      ctx.fillText(w, x, padT + gh + 20);
+      ctx.strokeStyle = '#1e293b'; ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT+gh); ctx.stroke();
+    }
+    ctx.save(); ctx.translate(20, padT + gh/2); ctx.rotate(-Math.PI/2);
+    ctx.fillText('Cost J(w)', 0, 0); ctx.restore();
+    ctx.fillText('Parameter w', padL + gw/2, c.height - 10);
+
+    // cost curve
+    ctx.beginPath(); ctx.strokeStyle = '#818cf8'; ctx.lineWidth = 3;
+    for (let px = 0; px <= gw; px++) {
+      const w = wMin + px / gw * (wMax - wMin);
+      const y = cToY(cost(w));
+      px === 0 ? ctx.moveTo(padL + px, y) : ctx.lineTo(padL + px, y);
+    }
+    ctx.stroke();
+
+    // history trail
+    if (history.length > 1) {
+      ctx.beginPath(); ctx.strokeStyle = 'rgba(251,191,36,0.5)'; ctx.lineWidth = 2;
+      history.forEach((h, i) => {
+        const x = wToX(h.w), y = cToY(h.c);
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+
+      // step dots
+      history.forEach((h, i) => {
+        if (i === history.length - 1) return;
+        ctx.fillStyle = 'rgba(251,191,36,0.6)';
+        ctx.beginPath(); ctx.arc(wToX(h.w), cToY(h.c), 3, 0, Math.PI*2); ctx.fill();
+      });
+    }
+
+    // current ball
+    const cur = history[history.length - 1];
+    const bx = wToX(cur.w), by = cToY(cur.c);
+    const bGlow = ctx.createRadialGradient(bx, by, 2, bx, by, 22);
+    bGlow.addColorStop(0, 'rgba(251,191,36,0.7)');
+    bGlow.addColorStop(1, 'rgba(251,191,36,0)');
+    ctx.fillStyle = bGlow; ctx.fillRect(bx-22, by-22, 44, 44);
+    ctx.fillStyle = '#fbbf24';
+    const br = 7 + Math.sin(bounce) * 1.5;
+    ctx.beginPath(); ctx.arc(bx, by, br, 0, Math.PI*2); ctx.fill();
+
+    // gradient arrow
+    if (running || history.length > 1) {
+      const grad = dcost(cur.w);
+      const arrowLen = Math.min(60, Math.abs(grad) * 20);
+      const dir = grad > 0 ? -1 : 1;
+      ctx.strokeStyle = '#f87171'; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(bx + dir * arrowLen, by); ctx.stroke();
+      // arrowhead
+      ctx.fillStyle = '#f87171';
+      ctx.beginPath();
+      ctx.moveTo(bx + dir * arrowLen, by);
+      ctx.lineTo(bx + dir * (arrowLen - 8), by - 5);
+      ctx.lineTo(bx + dir * (arrowLen - 8), by + 5);
+      ctx.fill();
+      ctx.fillStyle = '#f87171'; ctx.font = '11px monospace'; ctx.textAlign = 'center';
+      ctx.fillText('gradient', bx + dir * arrowLen / 2, by - 14);
+    }
+
+    requestAnimationFrame(drawGD);
+  }
+  drawGD();
+})();
+</script>
+</body>
+</html>
