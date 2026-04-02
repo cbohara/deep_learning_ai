@@ -52,3 +52,6 @@ tool use strength enables claude code to gather context needed
 - auto loaded into context 
 - convo stored locally on machine
 
+# [Claude Code Unpacked](https://ccunpacked.dev/#agent-loop)
+
+# [Claw Code](https://github.com/ultraworkers/claw-code)     
