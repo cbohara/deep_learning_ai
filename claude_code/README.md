@@ -107,7 +107,13 @@ commands
 
 # save to memory for guidance with pound key
 # always use uv to run the server do not use   
-pip directly     
+pip directly    
+
+# clear context window
+/clear
+
+# compact compacts convo so far to keep moving forward with more compact contextbrew install uv
+/compact 
 ```
 
 types of `CLAUDE.md` files
@@ -121,3 +127,17 @@ types of `CLAUDE.md` files
     - in project dir
 - `~/.claude/CLAUDE.md`
     - global settings
+
+context
+- Claude is only as good as the context that you give it
+- use @ to pull in file
+
+planning mode
+- activate using `shift tab shift tab`
+- reads thru files
+- understand what needs to be implemented 
+- iterate 
+- can either auto accept edits or be interactive
+
+plans are stored in
+`~/.claude/plans/`
