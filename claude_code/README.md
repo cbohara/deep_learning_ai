@@ -139,5 +139,18 @@ planning mode
 - iterate 
 - can either auto accept edits or be interactive
 
-plans are stored in
-`~/.claude/plans/`
+plans are stored in `~/.claude/plans/`   
+
+ollama 
+- loads models into memory - LLMs are large, so you need a persistant process managing them rather than cold starting each time
+- exposes an API - sends requests to local endpoint localhost:11434
+- manages inference - handles tokenization, GPU scheduling, context windows, etc
+
+```
+# starts server
+ollama serve
+# downloads model weights 
+ollama pull
+# CLI chat wrapper
+ollama run
+```

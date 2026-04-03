@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-RAG (Retrieval-Augmented Generation) chatbot that lets users query course materials via a chat interface. Built with a FastAPI backend, ChromaDB vector store, Claude API for generation, and a vanilla HTML/CSS/JS frontend.
+RAG (Retrieval-Augmented Generation) chatbot that lets users query course materials via a chat interface. Built with a FastAPI backend, ChromaDB vector store, Groq API (Llama 3.1) for generation, and a vanilla HTML/CSS/JS frontend.
 
 ## Commands
 
@@ -26,16 +26,16 @@ No test framework or linter is configured.
 
 ## Configuration
 
-Copy `.env.example` to `.env` and set `ANTHROPIC_API_KEY`. Other settings (chunk size, embedding model, etc.) are configured via environment variables in `backend/config.py`.
+Copy `.env.example` to `.env` and set `GROQ_API_KEY` (free at https://console.groq.com/keys). Other settings (chunk size, embedding model, etc.) are configured via environment variables in `backend/config.py`.
 
 ## Architecture
 
-**Query flow:** Frontend (`script.js`) → `/api/query` endpoint (`app.py`) → `RAGSystem.query()` → Claude tool-calling loop (`ai_generator.py` ↔ `search_tools.py` ↔ `vector_store.py`) → response with sources
+**Query flow:** Frontend (`script.js`) → `/api/query` endpoint (`app.py`) → `RAGSystem.query()` → Groq/Llama tool-calling loop (`ai_generator.py` ↔ `search_tools.py` ↔ `vector_store.py`) → response with sources
 
 **Document ingestion flow (on startup):** Course `.txt` files in `docs/` → `document_processor.py` parses metadata + chunks content → `vector_store.py` stores in two ChromaDB collections (`course_catalog` for metadata, `course_content` for searchable chunks)
 
 **Key design decisions:**
-- Claude Sonnet 4 with tool calling — the AI decides when/how to search rather than using a fixed retrieval step
+- Llama 3.1 (via Groq free tier) with tool calling — the AI decides when/how to search rather than using a fixed retrieval step
 - Conversation history managed server-side via `session_manager.py` (in-memory, 2-exchange default)
 - Sentence-based chunking (800 chars, 100 char overlap) in `document_processor.py`
 - Course documents must follow a specific format with `Course Title:`, `Course Link:`, `Course Instructor:`, and `Lesson N:` headers
