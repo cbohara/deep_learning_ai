@@ -145,12 +145,16 @@ ollama
 - loads models into memory - LLMs are large, so you need a persistant process managing them rather than cold starting each time
 - exposes an API - sends requests to local endpoint localhost:11434
 - manages inference - handles tokenization, GPU scheduling, context windows, etc
+- doesn't run well on my intel mac womp womp
 
+added mcp server via `.mcp.json` in project
 ```
-# starts server
-ollama serve
-# downloads model weights 
-ollama pull
-# CLI chat wrapper
-ollama run
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest"]
+    }
+  }
+}
 ```
