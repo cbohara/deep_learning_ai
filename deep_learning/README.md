@@ -157,3 +157,84 @@ layer 1 - input X (features) -> compute Z1 -> apply activation -> get A1
 layer 2 - input A1 (not X)   -> compute Z2 -> apply activation -> get A2 
 ...
 layer n - input An-1 -> compute Zn-1 -> apply activation -> final A = output probability 
+
+# C1W3 refresher 
+X = input data 
+- each column is 1 example
+- each row is a feature (x and y coordinate)
+- contains 400 examples
+Y = label data 
+- for each row, what is the prediciton
+
+```bash
+  NumPy (columns = examples):
+           point1  point2  point3  ...                                                               
+  row 1:    0.5    -0.3     1.1        ← x_coords
+  row 2:    1.2     0.8    -0.4        ← y_coords  
+```
+
+matrix math
+- typical to have each column be a separate example
+- can process all columns at once - not one at at time
+- instead of looping
+```python
+for i in range(400):
+    z = W1 @ X[:, i] + b1
+```
+- we can do everything all at once using vectorization
+```python
+Z1 = W1 @ X + b1
+```
+- numpy handles the parallelism under the hood
+
+weights and biases don't map to number of examples   
+each layer gets one W and one b   
+
+weights and biases define the neural network   
+their shape must line up with whatever is fed into that layer   
+
+each hidden neuron computes its own weighted sum and bias
+
+one weight per feature per neuron
+- so with 2 feaures, each neuron gets 2 weights  
+- neuron needs one weight for each input it receives so it can control how much it "cares" about each feature
+- neurons specialize in detecting different patterns during training by determining different weights 
+
+one bias per neuron
+- shifts the output up or down
+
+algebra: y = mx + b
+neural : z = wx + b
+- m / w = slope, weight
+- b = y intercept, bias
+- x = input feautre
+
+activation function (tanh, sigmoid) squishes the line into a curve   
+- from linear line from algebra -> neural network 
+- nonlinearity = network learns curves and complex patterns instead of just straight lines
+
+```python
+z[1] = w1 * x + b1   
+a[1] = tanh(z[1])
+```
+
+z1 = raw weighted sum = linear math  
+a1 = activation = what you get after squishing z1 thru tanh   
+
+z = multiply + add = raw score   
+a = output that gets passed forward  
+
+layer 1 computes 
+z1 = w1 * x + b1
+a1 = tanh(z1)      
+
+layers 2 recieves a1   
+z2 = w2 * a1 + b2
+a2 = sigmoid(z2)  
+
+the whole point of the squish is to introduce nonlinearity   
+otherwise it's just one big linear equiation   
+we only keep the z values separate for backprop step later   
+
+backprop tells u w1 should go down a bit, b2 should go up a bit , etc   
+then we adjust parameters (w and b) accordingly 
