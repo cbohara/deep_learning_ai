@@ -237,4 +237,31 @@ otherwise it's just one big linear equiation
 we only keep the z values separate for backprop step later   
 
 backprop tells u w1 should go down a bit, b2 should go up a bit , etc   
-then we adjust parameters (w and b) accordingly 
+then we adjust parameters (w and b) accordingly    
+
+hidden layer size / width = number of nodes within a single layer = more curves to combine = able to handle more complex pattern    
+number of hidden layers / depth = how many layers are stacked between input and output   
+
+bias = neuro's default inclination before any input arives 
+- in linear model y = wx + b, the weight w scales the input and b shifts the output up or down regardless of input 
+- it biases the prediction towards certain baseline value
+
+general methodology to build a neural network
+1. define the neural network structure aka layer size
+- size of input layer = number of features in the dataset
+- size of the hidden layer = hyperparameter we can set to any value
+- size of output layer = number of classes we are trying to predict 
+2. initialize the model's parameters 
+- weight = how much each input matters
+- bias = neuron's default inclination before any input arrives
+3. loop
+- forward propogation - push the input all the way through the network, layer by layer, to produce a prediction
+
+Input X is almost always a matrix
+1. Features per example
+- a single training example is typically a vector of features
+- ex: house price features [sqft, bedrooms, age, ...]
+- so one example x is a vector of length n (# of features)
+2. Multiple examples at once
+- stack all examples into a table or matrix and process in parallel via vectorization
+- vectorization is much faster than looping
