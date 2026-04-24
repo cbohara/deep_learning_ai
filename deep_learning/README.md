@@ -256,6 +256,10 @@ general methodology to build a neural network
 - bias = neuron's default inclination before any input arrives
 3. loop
 - forward propogation - push the input all the way through the network, layer by layer, to produce a prediction
+- compute loss / cost - measure how far the predictions are from the true labels and returns a single number summarizing model performance
+- backward propogation - work backwards through the network to compute gradients = a number saying increasing this weight by a tiny amount would change the loss by this much
+- update parameters - use gradient descent algorithm to nudge each weight and bias in the direction that reduces cost aka gets closer to the predictions matching ground truth
+- repeat until the cost stops decreasing meaningfully (convergence) or you hit a set number of iterations
 
 Input X is almost always a matrix
 1. Features per example
@@ -265,3 +269,95 @@ Input X is almost always a matrix
 2. Multiple examples at once
 - stack all examples into a table or matrix and process in parallel via vectorization
 - vectorization is much faster than looping
+
+hidden layers
+- progressively transform raw input into increasingly useful representations
+- each transformation re-expresses the data in a form that makes the final decision easier
+- the nonlinear activation functions lets the network carve out curved, complex boundaries
+
+output layer
+- learned features get collapsed into the actual value we create about
+- a probability, a class, a regression value
+
+activation = activation function(weight * inputs + bias)    
+
+debth = # of layers   
+width = # of neurons within a given layer   
+
+layers = sequential   
+- each layer transforms the previous layer's output
+- ex: image recognition
+    - layer 1 = edges + color blobs
+    - layer 2 = corners, textures, simple shapes
+    - layer 3 = object parts - eyes, wheels, leaves (combo of shapes)
+    - layer 4 = whole objects - faces, cars, trees
+- depth lets the network contruct hierarchical, compositional representations
+
+within a single layer, there are multiple neurons/units/nodes = parallel
+- more neurons in a layer = more distinct patterns the layer can recognize in parallel
+- a single activation function(weight * input + bias) inside a layer
+- each neuron within the layer receives the same inputs (previous layer's activations)
+- however each neuron starts with different random weights -> detect different patterns
+- produces its own activation
+
+```bash
+  Input        Hidden Layer        Output Layer
+  (2 features) (4 neurons)         (1 neuron)
+
+    x1 ──┬──► n1 ─┐
+         ├──► n2 ─┤
+    x2 ──┼──► n3 ─┼──► n_out ──► ŷ
+         └──► n4 ─┘
+```
+
+GPU demand
+- GPUs are in demand because neural network training is overwhelmingly matrix multiplication (matmul)
+- GPUs are purpose built to do matmul in parallel
+- vs CPU = small number of very powerful cores optimized to do sequential tasks (run general purpose code) fast   
+- GPU = thousands of simpler cores that are weaker individually but collectively able to do thousands of simple math operations in parallel 
+- training large models is almost entirely matmul
+    - GPT 4 scale models involve quintillions of floating point operations per training run
+    - on CPU it would take centuries
+    - on GPU cluster, weeks
+- inference is also matmul
+    - every time you send a message to Claude, a forward pass runs through hundreds of billions of weights
+    - serving millions of users requires massive GPU capacity
+- AI boom created a supply crunch
+    - NVIDIA has a moat with GPUs + CUDA
+        - PyTorch and Tensorflow are built on CUDA
+        - 15+ years of being the default
+        - CUDA = software that allows developers to write code for taht hardware without needing to think about low level GPU internals
+    - companies are all trying to catch up but NVIDIA has a large head start
+
+parallels to Python vs Pyspark:   
+┌──────────────────────┬────────────────────────┬─────────────────────────────┐
+│       Concept        │     Python/PySpark     │           CPU/GPU           │                                                                                                             
+├──────────────────────┼────────────────────────┼─────────────────────────────┤
+│ Sequential engine    │ Python on one machine  │ CPU with few powerful cores │
+├──────────────────────┼────────────────────────┼─────────────────────────────┤
+│ Parallel engine      │ Spark across a cluster │ GPU with thousands of cores │                                                                                                             
+├──────────────────────┼────────────────────────┼─────────────────────────────┤                                                                                                             
+│ Abstraction layer    │ PySpark API            │ CUDA / cuDNN                │                                                                                                             
+├──────────────────────┼────────────────────────┼─────────────────────────────┤                                                                                                             
+│ Underlying workhorse │ JVM + Scala            │ Low-level CUDA kernels      │
+├──────────────────────┼────────────────────────┼─────────────────────────────┤                                                                                                             
+│ What you write       │ DataFrame operations   │ Tensor operations           │
+├──────────────────────┼────────────────────────┼─────────────────────────────┤                                                                                                             
+│ What you don't write │ The distribution logic │ The parallelization logic   │
+└──────────────────────┴────────────────────────┴─────────────────────────────┘   
+
+## deep neural network
+deep = many hidden layers   
+- L = # of layers
+- n[1] = number of neurons/units/nodes in a layer 1
+- a[1] = activation in layer 1
+- a[0] = X input feature
+
+forward propogation:
+activation[1] = activation function(weight[1] * x input + bias[1]) ->
+activation[2] = activation function(weight[2] * activation[1] from previous layer + bias[2]) -> etc etc   
+
+
+```
+claude --resume 18806efc-d0de-45ec-a04a-da6efaf754d5
+```
