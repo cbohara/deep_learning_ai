@@ -357,7 +357,40 @@ forward propogation:
 activation[1] = activation function(weight[1] * x input + bias[1]) ->
 activation[2] = activation function(weight[2] * activation[1] from previous layer + bias[2]) -> etc etc   
 
+## model release process
 
-```
-claude --resume 18806efc-d0de-45ec-a04a-da6efaf754d5
-```
+a released model is essentially a frozen snapshot of weights  
+- after training (which can take weeks to months on huge GPU clusters), the result is a giant file of numbers = billions of weights and biases   
+- the same model can be loaded onto thousands of GPUs to serve millions of users in parallel
+
+nuances worth noting
+- same model = same weights, but surrounding system can change (ie system prompts, available tools, safety features, etc) without retraining -> different behavior
+- models are iteratively updated, but as new releases, not touching previous release
+- knowledge cutoff = because the weights are frozen, the model's knowledge is frozen at whatever date its training data ended
+
+every turn, the entire convo is re-fed through the model in entirety 
+- 10 messages within a chat, the model doesn't remember the first 9 messages 
+- serving system concats the entire transcript as a long sequence of tokens and runs the entire thing thru forward pass
+
+how this works
+- context window = hard limit
+    - models can only handle inputs up to a fixed size 
+    - if my convo exceeds that, the oldest content has to be dropped or summarized
+- token-by-token generation
+    - the forward pass doesn't produce a whole response in 1 shot
+    - it produces 1 token at a time
+- key-value caching is an optimization
+    - key value cache for tokens already processed 
+    - each new token only requires computing the new parts
+- cost scales with context length
+    - long convos get expensive
+    - stuff the whole code base in the prompt = impossible
+
+LLM = function - a very large math function from "sequence of tokens in" to "next token out"
+- convos = interfact trick where we keep feeding the function its own outputs concat with new user inputs
+- produces responses that look like memory and reasoning 
+
+transformer architecture added a critical ingredient on top of standard neural networks = attn mechanism 
+- let's each token in the input look at every other token and weight how relevant they are to each other
+- this is allows "it" in a sentence to know it refers back to a noun mentioned a few words earlier
+- attn itself is also implemented using the same fundamentals - matmul, weights, biases, activations
