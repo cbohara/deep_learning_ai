@@ -394,3 +394,67 @@ transformer architecture added a critical ingredient on top of standard neural n
 - let's each token in the input look at every other token and weight how relevant they are to each other
 - this is allows "it" in a sentence to know it refers back to a noun mentioned a few words earlier
 - attn itself is also implemented using the same fundamentals - matmul, weights, biases, activations
+
+## c1w4 review
+initialize paramaters
+- weights - set as small random values
+- bias - set as zero
+for each layer in the neural network, it gets its own weight matrix (aka table)
+- rows = how many nodes this layer has = how many outputs it produces
+- columns = how many nodes the previous layer has = how many inputs it receives from the previous layer
+for each layer in the neural network, it gets its own bias vector (aka list)
+- set to zero 
+
+within a single forward pass, weights are fixed
+- for each layer l, you take activations (aka inputs) from the previous layer and the current weights and compute
+    - z for the layer = weight and input matrix for the layer + bias for the layer
+    - a for the layer output = activation function(z)
+- weights are not adjusted during forward pass 
+- they are used to calculate
+
+across training iterations
+1. forward pass with curent weights and bias parameters -> predictions
+2. compute the loss = how good are the model predictions?
+3. backward pass = determine gradient -> how to adjust parameters to potentially improve prediction
+4. update parameters and start another iteration
+
+learning rate hyperparameter determines how to adjust parameters from one iteration to the next
+- too small -> training is slow 
+- too large -> may overshoot the global minimum
+
+```python
+# GRADED FUNCTION: linear_forward
+
+def linear_forward(A, W, b):
+    """
+    Implement the linear part of a layer's forward propagation.
+
+    Arguments:
+    A -- activations from previous layer (or input data): (size of previous layer, number of examples)
+    W -- weights matrix: numpy array of shape (size of current layer, size of previous layer)
+    b -- bias vector, numpy array of shape (size of the current layer, 1)
+
+    Returns:
+    Z -- the input of the activation function, also called pre-activation parameter 
+    cache -- a python tuple containing "A", "W" and "b" ; stored for computing the backward pass efficiently
+    """
+    
+    #(≈ 1 line of code)
+    ### START CODE HERE ###
+    # np.dot is matrix multiplication
+    # computes all the Z for all the units across the training examples in single call, with no loops = vectorization
+    # we calculate 
+    Z = np.dot(W, A) + b
+    
+    ### END CODE HERE ###
+    cache = (A, W, b)
+    
+    return Z, cache
+```
+
+when we iterate, we calculate
+- one pre-activation Z per node and example  
+- one post-activation A per node and example 
+
+linear backward
+- dW - avg per example 
