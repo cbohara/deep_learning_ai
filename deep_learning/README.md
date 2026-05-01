@@ -458,3 +458,14 @@ when we iterate, we calculate
 
 linear backward
 - dW - avg per example 
+
+## c1w4 assignment 2
+train_x_org.shape (209, 64, 64, 3)
+- 209 = number of training images 
+- 64, 64 = 64 pixels wide x 64 pixels tall
+- 3 = each pixel has 3 color channels
+
+train_y.shape (1, 209)
+- 1 label per image - 0 for not-a-cat, 1 for cat
+- 209 = one label for each of the 209 training images 
+
