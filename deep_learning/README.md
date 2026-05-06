@@ -469,3 +469,19 @@ train_y.shape (1, 209)
 - 1 label per image - 0 for not-a-cat, 1 for cat
 - 209 = one label for each of the 209 training images 
 
+# course 5 week 4 - transformer network
+transformer = attention + CNN
+
+self-attention provides more richer representation of the word
+- for each word in the sentence, look at the other words
+- figure out how that word relates to the others 
+- compute in parallel for all words in the sentence
+
+calculate attention value for each word using
+- query vector - ask questions about the word
+    - ie what's happening in Africa?
+- key vector - figure out which word gives the most relevant answer to that question
+    - ie Charlie is visiting Africa
+- value vector - value with the associated key
+
+multi-head attn = essentially a for loop over self-attn
