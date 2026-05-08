@@ -1,5 +1,7 @@
 # [Deep Learning Specialization](https://learn.deeplearning.ai/specializations/deep-learning/information#course-outline)
 
+# Course 1
+
 ## What is a neural network?
 Non-linear function
 - graph isn't a straight line
@@ -469,19 +471,60 @@ train_y.shape (1, 209)
 - 1 label per image - 0 for not-a-cat, 1 for cat
 - 209 = one label for each of the 209 training images 
 
-# course 5 week 4 - transformer network
-transformer = attention + CNN
+# Course 2
+applied ML is a highly iterative process   
+idea -> code -> experiment  
+hyperparameters are very specific for different approaches/domains   
 
-self-attention provides more richer representation of the word
-- for each word in the sentence, look at the other words
-- figure out how that word relates to the others 
-- compute in parallel for all words in the sentence
+## Data - train/holdout
+setting up train/dev/test sets well can speed up the iterative experiment cycle   
 
-calculate attention value for each word using
-- query vector - ask questions about the word
-    - ie what's happening in Africa?
-- key vector - figure out which word gives the most relevant answer to that question
-    - ie Charlie is visiting Africa
-- value vector - value with the associated key
+for all data, split up 
+- training
+    - what the model uses as input for training
+    - model sees features and labels together 
+    - it adjusts weights to fits the ground truth 
+- holdout
+    - model only sees the features when predicting
+    - then compare its predicts against the held-back labels to measure how well it generalizes
+    - used to pick hyperparameters/ compare algo choices
+    - needs to be just big enough to evaluate different algo choices
+    - k-fold cross-validation can help avoid one fixed holdout by rotating which slice serves as the holdout acrsoss k runs and averages the score 
+- test
+    - final validation uses data never seen before during the iterative dev cycle
+    - this is because holdout data indirectly leaks info into decision during each iterative adjustment that uses holdout for eval
+    - provides honest estimate of real world performance
 
-multi-head attn = essentially a for loop over self-attn
+modern big data era 
+- 60/20/20 split made sense with smaller datasets
+- may be overkill for larger datasets so may make more sense 98% train, 1% holdout, 1% test
+
+something to avoid = mismatched train/test distribution
+- ex: avoid having high quality images in the training set only and poor quality images in the dev/test sets only
+- want to mix things up 
+
+## Bias/variance in evaluting performance
+- high bias = training is underfitting
+    - performs poorly on both train and holdout
+- high variance = training is overfitting
+    - performs well on train set
+    - performs poorly on holdout set
+- high bias + high variance = worst of both worlds
+    - high bias = should have been curved, but was linear line which is underfitting
+    - high varaince = overfit on random outliers
+
+## ML basic recipe
+1. High bias - performing poorly on training data that includes both features and labels
+- Bigger network
+    - Too small a network = can't grasp complex patterns
+    - More layers/neurons -> can grasp richer, more nonlinear relationship
+- Train longer
+    - Network has enough capacity, but aren't given enough time to find good enough values for its weights 
+    - Just like a person who is more than capable, but just hasn't been given enough time to learn the material
+- May need to use a different algo/neural network architecture
+2. High variance - got past high bias so training model output performing well, but doesn't perform well on holdout data = overfit
+- Get more data (if possible)
+- Regularization
+- May need a more appropriate neural network architecture
+3. Done = no longer have high bias and high variance
+
