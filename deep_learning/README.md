@@ -527,4 +527,3 @@ something to avoid = mismatched train/test distribution
 - Regularization
 - May need a more appropriate neural network architecture
 3. Done = no longer have high bias and high variance
-

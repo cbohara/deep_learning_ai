@@ -158,3 +158,14 @@ added mcp server via `.mcp.json` in project
   }
 }
 ```
+
+## Commands
+CLAUDE.md = auto added to context   
+specific commands for specific convos -> create/use commands    
+
+settings.local.json - edit permissions granted   
+
+git worktees
+- avoid more than 1 claude code session overwriting each other   
+- work in isolation
+- then merge back into main repo
